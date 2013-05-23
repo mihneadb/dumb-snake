@@ -34,6 +34,7 @@ int mode = WALLS;
 int quit = 0;
 
 int t_val = 100;
+int score = 0;
 
 coords food;
 
@@ -96,7 +97,9 @@ void draw_wall() {
 }
 
 void lost() {
-    put_string(10, 10, "YOU LOST!");
+    char buf[100];
+    sprintf(buf, "YOU LOST! SCORE: %d.", score);
+    put_string(10, 10, buf);
     quit = 1;
 }
 
@@ -207,6 +210,7 @@ int main()
         if (head.x == food.x && head.y == food.y) {
             food.x = rand() % LIM_X + 1;
             food.y = rand() % LIM_Y + 1;
+            ++score;
         } else {
             ++start;
         }
