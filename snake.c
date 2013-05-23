@@ -14,16 +14,24 @@ typedef struct coords {
 
 #define LIM_X 24
 #define LIM_Y 80
+#define MIN_X 2
+#define MIN_Y 0
 #define MAXLEN (LIM_X * LIM_Y)
 
 #define STARTLEN 5
 #define STARTX 10
 #define STARTY 10
 
+#define CICLIC 1
+#define WALLS 2
+
 coords snake[MAXLEN];
 int snake_len = 0;
 int start = 0;
 int end = 0;
+
+int mode = WALLS;
+int quit = 0;
 
 int t_val = 100;
 
@@ -77,10 +85,24 @@ void put_string(int x, int y, char *s)
     mvprintw(x, y, s);
 }
 
+void draw_wall() {
+    int i;
+    for (i = 0; i < LIM_Y; ++i) {
+        put_char(MIN_X, i, 'x');
+        put_char(LIM_X - 1, i, 'x');
+        put_char(i + 2, MIN_Y, 'x');
+        put_char(i + 2, LIM_Y - 1, 'x');
+    }
+}
+
+void lost() {
+    put_string(10, 10, "YOU LOST!");
+    quit = 1;
+}
+
 
 int main()
 {
-    int quit = 0;
     int ch;
 
     initscr();
@@ -117,13 +139,15 @@ int main()
                     change_dir(RIGHT);
                     break;
             case 'q':
-                    quit = true;
+                    quit = 1;
                     break;
             case '1':
-                    t_val = 300;
+                    t_val = 100;
+                    mode = CICLIC;
                     break;
             case '2':
                     t_val = 100;
+                    mode = WALLS;
                     break;
             case '3':
                     t_val = 50;
@@ -131,6 +155,7 @@ int main()
             default:
                     break;
     	}
+        timeout(t_val);
 
         /* print the snake */
         clear_screen();
@@ -149,6 +174,32 @@ int main()
         render();
 
         head = snake[end - 1];
+
+        if (mode == CICLIC) {
+            if (head.x + directions[dir].x < MIN_X) {
+                head.x = LIM_X;
+            } else if (head.x + directions[dir].x >= LIM_X) {
+                head.x = MIN_X;
+            }
+            if (head.y + directions[dir].y < MIN_Y) {
+                head.y = LIM_Y;
+            } else if (head.y + directions[dir].y >= LIM_Y) {
+                head.y = MIN_Y;
+            }
+        } else {
+            draw_wall();
+            if (head.x + directions[dir].x < MIN_X) {
+                lost();
+            } else if (head.x + directions[dir].x >= LIM_X) {
+                lost();
+            }
+            if (head.y + directions[dir].y < MIN_Y) {
+                lost();
+            } else if (head.y + directions[dir].y >= LIM_Y) {
+                lost();
+            }
+        }
+
         snake[end] = (coords) {head.x + directions[dir].x,
                                head.y + directions[dir].y};
 
@@ -161,6 +212,8 @@ int main()
         }
         ++end;
     }
+    render();
+    sleep(1);
 
     fclose(log);
 
